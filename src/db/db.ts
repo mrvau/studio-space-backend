@@ -16,11 +16,7 @@ export const connectDB = async () => {
 	}
 };
 
-export const getDb = () => {
-	if (!db) throw new Error("Database is not initialized. Call connectDB first.");
-	return db;
-};
-
 export const getCollection = (name: string) => {
-	return getDb().collection(name);
+	if (!db) throw new Error("Database is not initialized. Call connectDB first.");
+	return db.collection(name);
 };

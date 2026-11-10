@@ -1,7 +1,13 @@
 import { Router } from "express";
-import { addNewStudio, getAllStudio } from "../controllers/studio.controller.js";
+import {
+	addNewStudio,
+	getAllStudios,
+	getFeaturedStudios,
+} from "../controllers/studio.controller.js";
 
 export const studioRouter = Router();
 
-studioRouter.get("/", getAllStudio);
+studioRouter.get("/", getAllStudios);
+studioRouter.get("/featured", getFeaturedStudios);
+
 studioRouter.post("/", addNewStudio);
