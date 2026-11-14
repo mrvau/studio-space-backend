@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { getCollection } from "../db/db.js";
+import { ObjectId } from "mongodb";
 
 export const getAllStudios = async (req: Request, res: Response, next: NextFunction) => {
 	const studioCollection = getCollection("studio");
@@ -22,7 +23,7 @@ export const getAllStudios = async (req: Request, res: Response, next: NextFunct
 	} catch (error) {
 		console.error(error);
 
-		res.status(500).json({ success: false, message: "Failed to fetch studios.", data: null });
+		res.status(500).json({ success: false, message: "Internal server error", data: null });
 	}
 };
 
@@ -35,7 +36,7 @@ export const getFeaturedStudios = async (req: Request, res: Response, next: Next
 		res.status(200).json({ success: true, message: "Fetched featured studios", data: studios });
 	} catch (error) {
 		console.error(error);
-		res.status(500).json({ success: false, message: "Failed to fetch studios.", data: null });
+		res.status(500).json({ success: false, message: "Internal server error", data: null });
 	}
 };
 
@@ -55,5 +56,22 @@ export const addNewStudio = async (req: Request, res: Response, next: NextFuncti
 	} catch (error) {
 		console.error(error);
 		res.status(500).json({ success: false, message: "Internal server error.", data: null });
+	}
+};
+
+export const getStudioById = async (req: Request, res: Response, next: NextFunction) => {
+	const studioCollection = getCollection("studio");
+	const { id } = req.params;
+	console.log(id);
+	try {
+		const studio = await studioCollection.findOne({ _id: new ObjectId(id as string) });
+		if (!studio) {
+			res.status(404).json({ success: false, message: "Studio not found", data: null });
+		}
+
+		res.status(200).json({ success: true, message: "Studio retrive successfully.", data: studio });
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ success: false, message: "Internal server error", data: null });
 	}
 };
