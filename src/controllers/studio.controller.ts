@@ -86,13 +86,43 @@ export const deleteStudio = async (req: Request, res: Response, next: NextFuncti
 		});
 
 		if (!deleteStudio) {
-			throw new Error("Internal server error");
+			res.status(500).json({ success: false, message: "Internal server error", data: null });
+			return;
 		}
 		res
 			.status(200)
-			.json({ success: true, message: "Studio deleted successfully", data: deleteStudio });
+			.json({ success: true, message: "Studio deleted successfully", data: deletedStudio });
 	} catch (error) {
 		console.log(error);
+		res.status(500).json({ success: false, message: "Internal server error", data: null });
+	}
+};
+
+export const updateStudio = async (req: Request, res: Response, next: NextFunction) => {
+	const studioCollection = getCollection("studio");
+	const { id } = req.params;
+	const data = req.body;
+
+	try {
+		const updatedStudio = await studioCollection.findOneAndUpdate(
+			{ _id: new ObjectId(id as string) },
+			{
+				$set: {
+					...data,
+				},
+			},
+		);
+
+		if (!updateStudio) {
+			res.status(500).json({ success: false, message: "Internal server error", data: null });
+			return;
+		}
+
+		res
+			.status(200)
+			.json({ success: true, message: "Studio updated successfully.", data: updatedStudio });
+	} catch (error) {
+		console.error(error);
 		res.status(500).json({ success: false, message: "Internal server error", data: null });
 	}
 };

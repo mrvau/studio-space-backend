@@ -5,6 +5,7 @@ import {
 	getAllStudios,
 	getFeaturedStudios,
 	getStudioById,
+	updateStudio,
 } from "../controllers/studio.controller.js";
 
 export const studioRouter = Router();
@@ -16,3 +17,4 @@ studioRouter.get("/:id", getStudioById);
 studioRouter.post("/", addNewStudio);
 
 studioRouter.delete("/:id", deleteStudio);
+studioRouter.put("/:id", updateStudio);
