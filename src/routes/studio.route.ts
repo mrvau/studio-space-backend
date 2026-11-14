@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
 	addNewStudio,
+	deleteStudio,
 	getAllStudios,
 	getFeaturedStudios,
 	getStudioById,
@@ -13,3 +14,5 @@ studioRouter.get("/featured", getFeaturedStudios);
 studioRouter.get("/:id", getStudioById);
 
 studioRouter.post("/", addNewStudio);
+
+studioRouter.delete("/:id", deleteStudio);

@@ -75,3 +75,24 @@ export const getStudioById = async (req: Request, res: Response, next: NextFunct
 		res.status(500).json({ success: false, message: "Internal server error", data: null });
 	}
 };
+
+export const deleteStudio = async (req: Request, res: Response, next: NextFunction) => {
+	const studioCollection = getCollection("studio");
+	const { id } = req.params;
+
+	try {
+		const deletedStudio = await studioCollection.findOneAndDelete({
+			_id: new ObjectId(id as string),
+		});
+
+		if (!deleteStudio) {
+			throw new Error("Internal server error");
+		}
+		res
+			.status(200)
+			.json({ success: true, message: "Studio deleted successfully", data: deleteStudio });
+	} catch (error) {
+		console.log(error);
+		res.status(500).json({ success: false, message: "Internal server error", data: null });
+	}
+};
