@@ -40,7 +40,7 @@ export const getFeaturedStudios = async (req: Request, res: Response, next: Next
 	}
 };
 
-export const addNewStudio = async (req: Request, res: Response, next: NextFunction) => {
+export const createNewStudio = async (req: Request, res: Response, next: NextFunction) => {
 	const studioCollection = getCollection("studio");
 	const newStudioData = req.body;
 
@@ -62,7 +62,6 @@ export const addNewStudio = async (req: Request, res: Response, next: NextFuncti
 export const getStudioById = async (req: Request, res: Response, next: NextFunction) => {
 	const studioCollection = getCollection("studio");
 	const { id } = req.params;
-	console.log(id);
 	try {
 		const studio = await studioCollection.findOne({ _id: new ObjectId(id as string) });
 		if (!studio) {
@@ -93,7 +92,7 @@ export const deleteStudio = async (req: Request, res: Response, next: NextFuncti
 			.status(200)
 			.json({ success: true, message: "Studio deleted successfully", data: deletedStudio });
 	} catch (error) {
-		console.log(error);
+		console.error(error);
 		res.status(500).json({ success: false, message: "Internal server error", data: null });
 	}
 };
