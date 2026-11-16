@@ -2,22 +2,20 @@ import { Request, Response, NextFunction } from "express";
 import { getCollection } from "../db/db.js";
 import { ObjectId } from "mongodb";
 
-export const getAllStudios = async (req: Request, res: Response, next: NextFunction) => {
+export const getAllStudios = async (req: Request, res: Response) => {
 	const studioCollection = getCollection("studio");
-	const { ownerEmail, category, limit = 0 } = req.query;
+	const { category } = req.query;
 
-	let query: Partial<{ ownerEmail: string; category: string }> | null = {};
+	let query: Partial<{ category: string }> | null = {};
 
-	if (ownerEmail) {
-		query.ownerEmail = String(ownerEmail);
-	} else if (category) {
+	if (category) {
 		query.category = String(category);
 	} else {
 		query = null;
 	}
 
 	try {
-		const studios = await studioCollection.find(query ? query : {}).toArray();
+		const studios = await studioCollection.find(query || {}).toArray();
 
 		res.status(200).json({ success: true, message: "Fetched all studios.", data: studios });
 	} catch (error) {
@@ -27,7 +25,7 @@ export const getAllStudios = async (req: Request, res: Response, next: NextFunct
 	}
 };
 
-export const getFeaturedStudios = async (req: Request, res: Response, next: NextFunction) => {
+export const getFeaturedStudios = async (req: Request, res: Response) => {
 	const studioCollection = getCollection("studio");
 
 	try {
@@ -40,7 +38,22 @@ export const getFeaturedStudios = async (req: Request, res: Response, next: Next
 	}
 };
 
-export const createNewStudio = async (req: Request, res: Response, next: NextFunction) => {
+export const getUserListedStudios = async (req: Request, res: Response) => {
+	const studioCollection = getCollection("studio");
+
+	try {
+		const userListedStudios = await studioCollection.find({ ownerId: req.payload.id }).toArray();
+
+		res
+			.status(200)
+			.json({ success: true, message: "Fetched listed studios.", data: userListedStudios });
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ success: false, message: "Internal server error", data: null });
+	}
+};
+
+export const createNewStudio = async (req: Request, res: Response) => {
 	const studioCollection = getCollection("studio");
 	const newStudioData = req.body;
 
@@ -59,7 +72,7 @@ export const createNewStudio = async (req: Request, res: Response, next: NextFun
 	}
 };
 
-export const getStudioById = async (req: Request, res: Response, next: NextFunction) => {
+export const getStudioById = async (req: Request, res: Response) => {
 	const studioCollection = getCollection("studio");
 	const { id } = req.params;
 	try {
@@ -75,16 +88,25 @@ export const getStudioById = async (req: Request, res: Response, next: NextFunct
 	}
 };
 
-export const deleteStudio = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteStudio = async (req: Request, res: Response) => {
 	const studioCollection = getCollection("studio");
 	const { id } = req.params;
 
 	try {
+		const studio = await studioCollection.findOne({
+			_id: new ObjectId(id as string),
+		});
+
+		if (String(studio?._id) !== String(req.payload.sub)) {
+			res.status(401).json({ success: false, message: "Unauthorized request!", data: null });
+			return;
+		}
+
 		const deletedStudio = await studioCollection.findOneAndDelete({
 			_id: new ObjectId(id as string),
 		});
 
-		if (!deleteStudio) {
+		if (!deletedStudio) {
 			res.status(500).json({ success: false, message: "Internal server error", data: null });
 			return;
 		}
@@ -97,12 +119,18 @@ export const deleteStudio = async (req: Request, res: Response, next: NextFuncti
 	}
 };
 
-export const updateStudio = async (req: Request, res: Response, next: NextFunction) => {
+export const updateStudio = async (req: Request, res: Response) => {
 	const studioCollection = getCollection("studio");
 	const { id } = req.params;
 	const data = req.body;
 
 	try {
+		const studio = await studioCollection.findOne({ _id: new ObjectId(id as string) });
+
+		if (String(studio?._id) !== String(req.payload.sub)) {
+			res.status(401).json({ success: false, message: "Unauthorized request!", data: null });
+		}
+
 		const updatedStudio = await studioCollection.findOneAndUpdate(
 			{ _id: new ObjectId(id as string) },
 			{
@@ -112,7 +140,7 @@ export const updateStudio = async (req: Request, res: Response, next: NextFuncti
 			},
 		);
 
-		if (!updateStudio) {
+		if (!updatedStudio) {
 			res.status(500).json({ success: false, message: "Internal server error", data: null });
 			return;
 		}
