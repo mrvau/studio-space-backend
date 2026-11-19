@@ -5,8 +5,7 @@ const validateToken = async (req: Request, res: Response, next: NextFunction) =>
 	const { authorization } = req.headers;
 
 	if (!authorization) {
-		res.status(401).json({ success: false, message: "Unauthorized request!", data: null });
-		return;
+		return res.status(401).json({ success: false, message: "Unauthorized request!", data: null });
 	}
 
 	const [_, token] = authorization.split(" ");
@@ -16,12 +15,16 @@ const validateToken = async (req: Request, res: Response, next: NextFunction) =>
 
 		const { payload } = await jwtVerify(token, JWKS);
 
+		if (!payload) {
+			return res.status(401).json({ success: false, message: "Unauthorized request!", data: null });
+		}
+
 		req.payload = payload;
 
 		next();
 	} catch (error) {
 		console.error(error);
-		res.status(401).json({ success: false, message: "Unauthorized request!", data: null });
+		return res.status(401).json({ success: false, message: "Unauthorized request!", data: null });
 	}
 };
 
