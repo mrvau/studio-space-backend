@@ -7,7 +7,7 @@ import {
 	getStudioById,
 	getUserListedStudios,
 	updateStudio,
-} from "../controllers/studio.controller.js";
+} from "../controllers/studios.controller.js";
 import validateToken from "../middlewares/validateToken.middleware.js";
 
 export const studioRouter = Router();

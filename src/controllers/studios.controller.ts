@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import { getCollection } from "../db/db.js";
 import { ObjectId } from "mongodb";
 
@@ -43,8 +43,10 @@ export const getFeaturedStudios = async (req: Request, res: Response) => {
 export const getUserListedStudios = async (req: Request, res: Response) => {
 	const studioCollection = getCollection("studio");
 
+	const { email } = req.payload;
+
 	try {
-		const userListedStudios = await studioCollection.find({ ownerId: req.payload.sub }).toArray();
+		const userListedStudios = await studioCollection.find({ ownerEmail: email }).toArray();
 
 		return res
 			.status(200)
@@ -58,12 +60,13 @@ export const getUserListedStudios = async (req: Request, res: Response) => {
 export const createNewStudio = async (req: Request, res: Response) => {
 	const studioCollection = getCollection("studio");
 	const studioData = req.body;
+	const { id, name, email } = req.payload;
 
 	const newStudioData = {
 		...studioData,
-		ownerId: req.payload.id,
-		ownerName: req.payload.name,
-		ownerEmail: req.payload.email,
+		ownerId: id,
+		ownerName: name,
+		ownerEmail: email,
 	};
 
 	try {
@@ -104,12 +107,13 @@ export const deleteStudio = async (req: Request, res: Response) => {
 	const studioCollection = getCollection("studio");
 	const { id } = req.params;
 
+	const { id: ownerId } = req.payload;
 	try {
 		const studio = await studioCollection.findOne({
 			_id: new ObjectId(id as string),
 		});
 
-		if (String(studio?.ownerId) !== String(req.payload.sub)) {
+		if (String(studio?.ownerId) !== String(ownerId)) {
 			return res.status(401).json({ success: false, message: "Unauthorized request!", data: null });
 		}
 
@@ -133,11 +137,12 @@ export const updateStudio = async (req: Request, res: Response) => {
 	const studioCollection = getCollection("studio");
 	const { id } = req.params;
 	const data = req.body;
+	const { name, email, id: ownerId } = req.payload;
 
 	try {
 		const studio = await studioCollection.findOne({ _id: new ObjectId(id as string) });
 
-		if (String(studio?.ownerId) !== String(req.payload.sub)) {
+		if (String(studio?.ownerId) !== String(ownerId)) {
 			return res.status(401).json({ success: false, message: "Unauthorized request!", data: null });
 		}
 
@@ -146,6 +151,9 @@ export const updateStudio = async (req: Request, res: Response) => {
 			{
 				$set: {
 					...data,
+					ownerId,
+					ownerName: name,
+					ownerEmail: email,
 				},
 			},
 		);

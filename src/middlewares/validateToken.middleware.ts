@@ -1,19 +1,18 @@
 import { Request, Response, NextFunction } from "express";
 import { createRemoteJWKSet, jwtVerify } from "jose";
+import { Payload } from "../types/index.js";
 
 const validateToken = async (req: Request, res: Response, next: NextFunction) => {
-	const { authorization } = req.headers;
+	const token = req.headers.authorization?.split(" ")[1];
 
-	if (!authorization) {
+	if (!token) {
 		return res.status(401).json({ success: false, message: "Unauthorized request!", data: null });
 	}
-
-	const [_, token] = authorization.split(" ");
 
 	try {
 		const JWKS = createRemoteJWKSet(new URL(`${process.env.CLIENT_URL}/api/auth/jwks`));
 
-		const { payload } = await jwtVerify(token, JWKS);
+		const { payload } = await jwtVerify<Payload>(token, JWKS);
 
 		if (!payload) {
 			return res.status(401).json({ success: false, message: "Unauthorized request!", data: null });
@@ -24,7 +23,7 @@ const validateToken = async (req: Request, res: Response, next: NextFunction) =>
 		next();
 	} catch (error) {
 		console.error(error);
-		return res.status(401).json({ success: false, message: "Unauthorized request!", data: null });
+		return res.status(500).json({ success: false, message: "Internal server error!", data: null });
 	}
 };
 
