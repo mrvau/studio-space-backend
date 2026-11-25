@@ -11,8 +11,8 @@ export const connectDB = async () => {
 
 		return client;
 	} catch (error) {
-		console.dir(error);
-		process.exit(1);
+		await client.close().catch(() => undefined);
+		throw error;
 	}
 };
 

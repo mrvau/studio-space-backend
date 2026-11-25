@@ -12,28 +12,24 @@ export const checkDuplicateBooking = async (req: Request, res: Response, next: N
 
 	const bookingData = req.body;
 
-	try {
-		const existingBooking = await bookingCollection.findOne({
-			studioId: bookingData.studioId,
-			bookingDate: bookingData.bookingDate,
-		});
+	const existingBooking = await bookingCollection.findOne({
+		studioId: bookingData.studioId,
+		bookingDate: bookingData.bookingDate,
+		status: { $ne: "Cancelled" },
+	});
 
-		if (!existingBooking) return next();
+	if (!existingBooking) return next();
 
-		const existingStart = convertToMinutes(existingBooking.startTime);
-		const existingEnd = convertToMinutes(existingBooking.endTime);
+	const existingStart = convertToMinutes(existingBooking.startTime);
+	const existingEnd = convertToMinutes(existingBooking.endTime);
 
-		const newStart = convertToMinutes(bookingData.startTime);
-		const newEnd = convertToMinutes(bookingData.endTime);
+	const newStart = convertToMinutes(bookingData.startTime);
+	const newEnd = convertToMinutes(bookingData.endTime);
 
-		if (newStart < existingEnd && newEnd > existingStart) {
-			return res
-				.status(409)
-				.json({ success: false, message: "Studio is already booked.", data: null });
-		}
-		next();
-	} catch (error) {
-		console.error(error);
-		return res.status(500).json({ success: false, message: "Internal server error!", data: null });
+	if (newStart < existingEnd && newEnd > existingStart) {
+		return res
+			.status(409)
+			.json({ success: false, message: "Studio is already booked.", data: null });
 	}
+	return next();
 };

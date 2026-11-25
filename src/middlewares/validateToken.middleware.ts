@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from "express";
-import { createRemoteJWKSet, jwtVerify } from "jose";
+import { createRemoteJWKSet, errors, jwtVerify } from "jose";
 import { Payload } from "../types/index.js";
 
 const validateToken = async (req: Request, res: Response, next: NextFunction) => {
-	const token = req.headers.authorization?.split(" ")[1];
+	const authorization = req.headers.authorization;
+	const [scheme, token, ...extraParts] = authorization?.trim().split(/\s+/) ?? [];
 
-	if (!token) {
+	if (scheme?.toLowerCase() !== "bearer" || !token || extraParts.length > 0) {
 		return res.status(401).json({ success: false, message: "Unauthorized request!", data: null });
 	}
 
@@ -14,16 +15,27 @@ const validateToken = async (req: Request, res: Response, next: NextFunction) =>
 
 		const { payload } = await jwtVerify<Payload>(token, JWKS);
 
-		if (!payload) {
-			return res.status(401).json({ success: false, message: "Unauthorized request!", data: null });
-		}
-
 		req.payload = payload;
 
-		next();
+		return next();
 	} catch (error) {
-		console.error(error);
-		return res.status(500).json({ success: false, message: "Internal server error!", data: null });
+		if (
+			error instanceof errors.JWTExpired ||
+			error instanceof errors.JWTClaimValidationFailed ||
+			error instanceof errors.JWTInvalid ||
+			error instanceof errors.JWSInvalid ||
+			error instanceof errors.JWSSignatureVerificationFailed ||
+			error instanceof errors.JWEInvalid ||
+			error instanceof errors.JWEDecryptionFailed
+		) {
+			return res.status(401).json({
+				success: false,
+				message: "Unauthorized request!",
+				data: null,
+			});
+		}
+
+		throw error;
 	}
 };
 

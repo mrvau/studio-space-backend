@@ -7,9 +7,18 @@ const PORT = 8000;
 const startServer = async () => {
 	await connectDB();
 
-	app.listen(PORT, () => {
-		console.log(`Server running at port ${PORT}`);
+	await new Promise<void>((resolve, reject) => {
+		const server = app.listen(PORT, () => {
+			console.log(`Server running at port ${PORT}`);
+			resolve();
+		});
+
+		server.once("error", reject);
 	});
 };
 
-startServer();
+startServer().catch((error: unknown) => {
+	const errorName = error instanceof Error ? error.name : "UnknownError";
+	console.error("Failed to start StudioSpace API", { errorName });
+	process.exit(1);
+});
